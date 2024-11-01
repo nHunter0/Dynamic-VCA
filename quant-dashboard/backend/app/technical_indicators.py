@@ -24,6 +24,8 @@ class TechnicalIndicators:
         data['sma_20'] = sma_20.sma_indicator()
         data['sma_50'] = sma_50.sma_indicator()
         data['sma_200'] = sma_200.sma_indicator()
+
+
     
     @staticmethod
     def add_volatility_indicators(data: pd.DataFrame) -> None:
