@@ -1,3 +1,5 @@
+# command line only. 
+
 class ReportGenerator:
     @staticmethod
     def generate_analysis_report(results: dict, ticker: str, monthly_target: float) -> str:
