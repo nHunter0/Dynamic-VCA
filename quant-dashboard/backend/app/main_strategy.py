@@ -28,7 +28,7 @@ class EnhancedQuantStrategy:
                 raise ValueError(f"No data found for {self.ticker}")
             
             # Calculate daily returns
-            data['daily_return'] = data['Close'].pct_change()
+            data['Daily_Return'] = data['Close'].pct_change()
             
             # Add technical indicators
             self.indicators.add_all_indicators(data)
@@ -51,7 +51,7 @@ class EnhancedQuantStrategy:
             return data, moving_averages
         except Exception as e:
             raise Exception(f"Error fetching data: {str(e)}")
-
+    
     def calculate_investment_recommendation(self, current_price, market_regime, volatility):
         """Calculate detailed investment recommendations."""
         # Base position size calculation
@@ -73,7 +73,7 @@ class EnhancedQuantStrategy:
         recommended_amount = self.monthly_target * position_multiplier
         
         # Calculate units based on current price
-        recommended_units = int(recommended_amount / current_price)
+        recommended_units = int(recommended_amount / current_price) if current_price > 0 else 0
         
         # Calculate remaining target
         total_invested = self.monthly_target  # This should be tracked over time in a real system
@@ -85,7 +85,7 @@ class EnhancedQuantStrategy:
             'remaining_target': remaining_target,
             'allocation_multiplier': position_multiplier
         }
-
+    
     def calculate_recommendation(self):
         """Generate investment recommendation."""
         try:
@@ -98,7 +98,7 @@ class EnhancedQuantStrategy:
             # Calculate momentum and volatility
             price_momentum = (current_price / data['Close'].iloc[-20] - 1) if len(data) >= 20 else 0
             volume_momentum = (data['Volume'].iloc[-1] / data['Volume'].iloc[-20] - 1) if len(data) >= 20 else 0
-            volatility = data['daily_return'].std() * np.sqrt(252)
+            volatility = data['Daily_Return'].std() * np.sqrt(252)
             
             # Calculate market regime
             sma_200 = data['SMA200'].iloc[-1]

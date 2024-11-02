@@ -192,7 +192,7 @@ const Dashboard = () => {
             </div>
 
             {/* Stock Selector Dropdown */}
-            <div className="relative w-full md:w-96">
+            <div className="pt-6 relative w-full md:w-96">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="w-full px-4 py-2 bg-gray-700 rounded-lg flex items-center justify-between hover:bg-gray-650 transition-colors"
