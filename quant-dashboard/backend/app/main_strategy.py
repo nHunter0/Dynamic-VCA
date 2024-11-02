@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 from technical_indicators import TechnicalIndicators
-from predict_future import predict_future  # Import the AI prediction function
+from AI.predict_future import predict_future  # Import the AI prediction function
 
 class EnhancedQuantStrategy:
     def __init__(self, ticker="VAS.AX", monthly_target=2000, total_target=10000,

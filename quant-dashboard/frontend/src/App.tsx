@@ -1,14 +1,12 @@
-import { useState } from "react";
-
-import "./App.css";
-
-import Dashboard from "./components/DashBoard.jsx";
+// src/App.txs
+import React from "react";
+import Dashboard from "./components/Dashboard/Dashboard";
 
 function App() {
   return (
-    <>
+    <div className="bg-gray-900 min-h-screen text-white">
       <Dashboard />
-    </>
+    </div>
   );
 }
 

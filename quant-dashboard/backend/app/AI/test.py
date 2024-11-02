@@ -1,6 +1,6 @@
 # test.py
 
-from predict_future_advanced import predict_future_advanced_parallel
+from AI.predict_future_advanced import predict_future_advanced_parallel
 
 if __name__ == "__main__":
     try:

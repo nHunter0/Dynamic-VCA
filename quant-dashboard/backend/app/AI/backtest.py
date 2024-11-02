@@ -2,86 +2,76 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 from sklearn.metrics import mean_absolute_error, mean_squared_error
-from predict_future_advanced import predict_future_advanced_parallel
+from math import sqrt
+from datetime import timedelta
+from AI.predict_future import predict_future
 
-def backtest_model(ticker: str, train_period='5y', test_days=30):
+def backtest_model(ticker, train_period="5y", test_days=30):
     """
-    Backtest the prediction model on historical data.
-    
+    Backtest the model by training on historical data and testing against recent actual data.
+
     Parameters:
     - ticker (str): Stock ticker symbol
-    - train_period (str): Time period for training data (e.g., '5y' for 5 years)
-    - test_days (int): Number of days for backtesting (rolling predictions)
-    
-    Returns:
-    - dict: Dictionary containing backtesting metrics and a comparison dataframe
-    """
-    # Fetch historical data
-    data = yf.download(ticker, period=train_period)
-    data = data.reset_index()
-    
-    if data.empty:
-        raise ValueError(f"No data found for ticker {ticker}")
+    - train_period (str): Period to fetch historical data for training
+    - test_days (int): Number of days to predict and compare with actual prices
 
-    # Split data into training and testing sets
-    test_data = data[-test_days:]
-    test_dates = test_data['Date']
-    
-    # Run model predictions for test period
+    Returns:
+    - dict: Backtest metrics and comparison data
+    """
     try:
-        result = predict_future_advanced_parallel(ticker=ticker, days_ahead=test_days)
-        predictions = result['forecast']
-        
-        # Convert prediction results to DataFrame
-        prediction_df = pd.DataFrame(predictions)
-        prediction_df.set_index('ds', inplace=True)
-        prediction_df.index = pd.to_datetime(prediction_df.index)
-        
-        # Filter actual values for the test period
-        actuals = test_data.set_index('Date')['Close']
-        actuals.index = pd.to_datetime(actuals.index)
-        
-        # Ensure both actual and predicted values are 1-dimensional
-        comparison_df = pd.DataFrame({
-            'actual_price': actuals.values.flatten(),  # Flatten to ensure 1D
-            'predicted_price': prediction_df['yhat'].values.flatten()  # Flatten to ensure 1D
-        }, index=actuals.index)
-        
-        # Calculate errors
-        mae = mean_absolute_error(comparison_df['actual_price'], comparison_df['predicted_price'])
-        mse = mean_squared_error(comparison_df['actual_price'], comparison_df['predicted_price'])
-        mape = np.mean(np.abs((comparison_df['actual_price'] - comparison_df['predicted_price']) / comparison_df['actual_price'])) * 100
-        
+        # Fetch historical data for the training period
+        stock_data = yf.download(ticker, period=train_period)
+        stock_data = stock_data.reset_index()
+
+        if stock_data.empty:
+            raise ValueError(f"No data found for ticker {ticker}")
+
+        # Prepare data
+        total_data_points = len(stock_data)
+        train_data = stock_data.iloc[:total_data_points - test_days]
+        test_data = stock_data.iloc[total_data_points - test_days:]
+
+        predictions = []
+        actual_prices = test_data['Close'].values
+        dates = test_data['Date'].dt.strftime('%Y-%m-%d').values
+
+        for i in range(test_days):
+            # Train the model on data up to the i-th test day
+            train_until = total_data_points - test_days + i
+            train_subset = stock_data.iloc[:train_until]
+
+            # Use your existing predict_future function but ensure it only uses train_subset
+            result = predict_future_custom(train_subset, days_ahead=1)
+            predictions.append(result['forecast'][-1]['yhat'])  # Get the forecasted price
+
+        # Calculate backtest metrics
+        mae = mean_absolute_error(actual_prices, predictions)
+        mse = mean_squared_error(actual_prices, predictions)
+        rmse = sqrt(mse)
+        mape = np.mean(np.abs((actual_prices - predictions) / actual_prices)) * 100
+
         metrics = {
-            'MAE': mae,
-            'MSE': mse,
-            'RMSE': np.sqrt(mse),
-            'MAPE': mape
+            "MAE": mae,
+            "MSE": mse,
+            "RMSE": rmse,
+            "MAPE": mape
         }
-        
-        print("\nBacktest Metrics:")
-        print(f"Mean Absolute Error (MAE): {metrics['MAE']}")
-        print(f"Mean Squared Error (MSE): {metrics['MSE']}")
-        print(f"Root Mean Squared Error (RMSE): {metrics['RMSE']}")
-        print(f"Mean Absolute Percentage Error (MAPE): {metrics['MAPE']:.2f}%")
-        
+
+        # Prepare comparison data for plotting
+        comparison_df = pd.DataFrame({
+            'date': dates,
+            'actual_price': actual_prices,
+            'predicted_price': predictions
+        })
+
+        # Convert DataFrame to dictionary for JSON response
+        comparison_df = comparison_df.to_dict(orient='records')
+
         return {
             'metrics': metrics,
             'comparison_df': comparison_df
         }
-        
-    except Exception as e:
-        print(f"Error in backtesting: {e}")
-        return None
 
-# Run backtesting
-if __name__ == "__main__":
-    ticker = "VAS.AX"  # Example ticker
-    test_days = 30  # Backtest over the last 30 days of available data
-    results = backtest_model(ticker, test_days=test_days)
-    
-    # Display comparison DataFrame and metrics
-    if results:
-        comparison_df = results['comparison_df']
-        print("\nBacktest Results (Predicted vs Actual):")
-        print(comparison_df)
+    except Exception as e:
+        print(f"Error in backtesting: {str(e)}")
+        raise Exception(f"Error in backtesting: {str(e)}")
