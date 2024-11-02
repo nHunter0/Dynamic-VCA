@@ -1,0 +1,36 @@
+2024-11-02 13:25:54,425 [INFO] Starting Flask application...
+2024-11-02 13:25:54,446 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.119:5000
+2024-11-02 13:25:54,446 [INFO] [33mPress CTRL+C to quit[0m
+2024-11-02 13:25:54,448 [INFO]  * Restarting with stat
+2024-11-02 13:25:55,799 [INFO] Starting Flask application...
+2024-11-02 13:25:55,808 [WARNING]  * Debugger is active!
+2024-11-02 13:25:55,816 [INFO]  * Debugger PIN: 304-253-733
+2024-11-02 13:26:02,504 [INFO] 127.0.0.1 - - [02/Nov/2024 13:26:02] "[33mGET / HTTP/1.1[0m" 404 -
+2024-11-02 13:26:02,567 [INFO] 127.0.0.1 - - [02/Nov/2024 13:26:02] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2024-11-02 13:26:07,241 [INFO] 127.0.0.1 - - [02/Nov/2024 13:26:07] "[33mOPTIONS /api/analyze HTTP/1.1[0m" 404 -
+2024-11-02 13:26:07,242 [INFO] 127.0.0.1 - - [02/Nov/2024 13:26:07] "[33mOPTIONS /api/analyze HTTP/1.1[0m" 404 -
+2024-11-02 13:26:08,890 [INFO] 127.0.0.1 - - [02/Nov/2024 13:26:08] "OPTIONS /api/predict HTTP/1.1" 200 -
+2024-11-02 13:26:10,470 [INFO] 127.0.0.1 - - [02/Nov/2024 13:26:10] "[33mOPTIONS /api/analyze HTTP/1.1[0m" 404 -
+2024-11-02 13:30:27,813 [INFO] Starting Flask application...
+2024-11-02 13:30:27,823 [WARNING]  * Debugger is active!
+2024-11-02 13:30:27,832 [INFO]  * Debugger PIN: 304-253-733
+2024-11-02 13:31:35,643 [INFO] 127.0.0.1 - - [02/Nov/2024 13:31:35] "OPTIONS /api/predict HTTP/1.1" 200 -
+2024-11-02 13:31:39,957 [INFO] 127.0.0.1 - - [02/Nov/2024 13:31:39] "OPTIONS /api/predict HTTP/1.1" 200 -
+2024-11-02 13:31:40,176 [INFO] 127.0.0.1 - - [02/Nov/2024 13:31:40] "OPTIONS /api/predict HTTP/1.1" 200 -
+2024-11-02 13:31:40,359 [INFO] 127.0.0.1 - - [02/Nov/2024 13:31:40] "OPTIONS /api/predict HTTP/1.1" 200 -
+2024-11-02 13:31:42,356 [INFO] 127.0.0.1 - - [02/Nov/2024 13:31:42] "[33mOPTIONS /api/analyze HTTP/1.1[0m" 404 -
+2024-11-02 13:31:43,155 [INFO] 127.0.0.1 - - [02/Nov/2024 13:31:43] "OPTIONS /api/predict HTTP/1.1" 200 -
+2024-11-02 13:31:44,106 [INFO] 127.0.0.1 - - [02/Nov/2024 13:31:44] "[33mOPTIONS /api/analyze HTTP/1.1[0m" 404 -
+2024-11-02 13:31:44,107 [INFO] 127.0.0.1 - - [02/Nov/2024 13:31:44] "[33mOPTIONS /api/analyze HTTP/1.1[0m" 404 -
+2024-11-02 13:31:45,152 [INFO] 127.0.0.1 - - [02/Nov/2024 13:31:45] "[33mOPTIONS /api/analyze HTTP/1.1[0m" 404 -
+2024-11-02 13:31:45,581 [INFO] 127.0.0.1 - - [02/Nov/2024 13:31:45] "[33mOPTIONS /api/analyze HTTP/1.1[0m" 404 -
+2024-11-02 13:31:45,740 [INFO] 127.0.0.1 - - [02/Nov/2024 13:31:45] "[33mOPTIONS /api/analyze HTTP/1.1[0m" 404 -
+2024-11-02 13:31:45,938 [INFO] 127.0.0.1 - - [02/Nov/2024 13:31:45] "[33mOPTIONS /api/analyze HTTP/1.1[0m" 404 -
+2024-11-02 13:35:21,532 [INFO]  * Detected change in 'C:\\Users\\User\\Desktop\\Dynamic-VCA\\quant-dashboard\\backend\\app\\app.py', reloading
+2024-11-02 13:35:23,055 [INFO] Starting Flask application...
+2024-11-02 13:35:23,067 [WARNING]  * Debugger is active!
+2024-11-02 13:35:23,074 [INFO]  * Debugger PIN: 304-253-733
+2024-11-02 13:35:44,986 [INFO]  * Detected change in 'C:\\Users\\User\\Desktop\\Dynamic-VCA\\quant-dashboard\\backend\\app\\app.py', reloading

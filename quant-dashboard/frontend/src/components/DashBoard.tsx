@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -9,7 +9,13 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { TrendingUp, ChevronDown, Search, AlertCircle } from "lucide-react";
+import {
+  TrendingUp,
+  ChevronDown,
+  Search,
+  AlertCircle,
+  Activity,
+} from "lucide-react";
 
 const STOCK_OPTIONS = [
   {
@@ -44,13 +50,7 @@ const STOCK_OPTIONS = [
   },
 ];
 
-const MetricCard = ({
-  title,
-  value,
-  trend = null,
-  suffix = "",
-  colorClass = "text-blue-400",
-}) => (
+const MetricCard = ({ title, value, trend = null, suffix = "", colorClass = "text-blue-400" }) => (
   <div className="bg-gray-800 rounded-lg p-6 hover:bg-gray-750 transition-all">
     <h3 className="text-gray-400 text-sm mb-2">{title}</h3>
     <div className="flex items-baseline gap-2">
@@ -60,9 +60,7 @@ const MetricCard = ({
       </span>
       {trend !== null && (
         <span
-          className={`text-sm font-medium ${
-            trend >= 0 ? "text-green-400" : "text-red-400"
-          }`}
+          className={`text-sm font-medium ${trend >= 0 ? "text-green-400" : "text-red-400"}`}
         >
           {trend > 0 ? "+" : ""}
           {trend.toFixed(2)}%
@@ -81,6 +79,12 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [monthlyTarget, setMonthlyTarget] = useState(2000);
   const [totalTarget, setTotalTarget] = useState(10000);
+  const [aiData, setAiData] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [backtestData, setBacktestData] = useState(null);
+  const [backtestLoading, setBacktestLoading] = useState(false);
+  const [backtestError, setBacktestError] = useState("");
 
   const filteredOptions = STOCK_OPTIONS.filter(
     (option) =>
@@ -118,6 +122,59 @@ const Dashboard = () => {
     }
   };
 
+  const handlePredictWithAI = async (advanced = false) => {
+    setAiLoading(true);
+    setAiError("");
+    try {
+      const endpoint = advanced ? "/api/predict-advanced" : "/api/predict";
+      const response = await fetch(`http://localhost:5000${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticker }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${advanced ? 'advanced ' : ''}AI prediction`);
+      }
+
+      const result = await response.json();
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      setAiData(result.forecast);
+    } catch (err) {
+      setAiError(err.message || `Error fetching ${advanced ? 'advanced ' : ''}AI prediction. Please try again.`);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleBacktest = async () => {
+    setBacktestLoading(true);
+    setBacktestError("");
+    try {
+      const response = await fetch("http://localhost:5000/api/backtest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticker }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch backtest results");
+      }
+
+      const result = await response.json();
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      setBacktestData(result);
+    } catch (err) {
+      setBacktestError(err.message || "Error running backtest. Please try again.");
+    } finally {
+      setBacktestLoading(false);
+    }
+  };
+
   const handleSelectStock = (option) => {
     setTicker(option.value);
     setDropdownOpen(false);
@@ -125,9 +182,9 @@ const Dashboard = () => {
   };
 
   // Fetch data when component mounts
-  React.useEffect(() => {
+  useEffect(() => {
     fetchData();
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
@@ -145,10 +202,7 @@ const Dashboard = () => {
 
             <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
               <div className="flex flex-col gap-1">
-                <label
-                  htmlFor="monthly-target"
-                  className="text-sm text-gray-400"
-                >
+                <label htmlFor="monthly-target" className="text-sm text-gray-400">
                   Monthly Investment ($)
                 </label>
                 <input
@@ -192,14 +246,13 @@ const Dashboard = () => {
             </div>
 
             {/* Stock Selector Dropdown */}
-            <div className="pt-6 relative w-full md:w-96">
+            <div className="relative w-full md:w-96">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="w-full px-4 py-2 bg-gray-700 rounded-lg flex items-center justify-between hover:bg-gray-650 transition-colors"
               >
                 <span>
-                  {STOCK_OPTIONS.find((opt) => opt.value === ticker)?.label ||
-                    ticker}
+                  {STOCK_OPTIONS.find((opt) => opt.value === ticker)?.label || ticker}
                 </span>
                 <ChevronDown
                   className={`w-5 h-5 transition-transform ${
@@ -230,9 +283,7 @@ const Dashboard = () => {
                         className="w-full px-4 py-2 text-left hover:bg-gray-700 focus:outline-none focus:bg-gray-700"
                       >
                         <div className="font-medium">{option.label}</div>
-                        <div className="text-sm text-gray-400">
-                          {option.description}
-                        </div>
+                        <div className="text-sm text-gray-400">{option.description}</div>
                       </button>
                     ))}
                   </div>
@@ -240,113 +291,142 @@ const Dashboard = () => {
               )}
             </div>
           </div>
+
+          {/* Predict with AI Button */}
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={handlePredictWithAI}
+              className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+            >
+              <Activity className="w-5 h-5" />
+              Predict with AI
+            </button>
+          </div>
         </div>
 
+        {/* Error Messages */}
         {error && (
           <div className="bg-red-900/50 border-l-4 border-red-500 p-4 rounded-lg flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-red-400" />
             <span className="text-red-200">{error}</span>
           </div>
         )}
+        {aiError && (
+          <div className="bg-red-900/50 border-l-4 border-red-500 p-4 rounded-lg flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-red-400" />
+            <span className="text-red-200">{aiError}</span>
+          </div>
+        )}
 
-        {loading ? (
+        {/* Loading Indicators */}
+        {loading && (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             <p className="mt-2 text-gray-400">Loading market data...</p>
           </div>
-        ) : (
-          data && (
-            <div className="space-y-6">
-              {/* Metrics Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <MetricCard
-                  title="Current Price"
-                  value={data.metrics?.current_price?.toFixed(2)}
-                  trend={data.metrics?.momentum?.price_momentum * 100}
-                  suffix=""
-                  colorClass="text-white"
-                />
-                <MetricCard
-                  title="RSI (14)"
-                  value={data.metrics?.technical_metrics?.rsi?.toFixed(1)}
-                  colorClass={
-                    data.metrics?.technical_metrics?.rsi > 70
-                      ? "text-red-400"
-                      : data.metrics?.technical_metrics?.rsi < 30
-                      ? "text-green-400"
-                      : "text-white"
-                  }
-                />
-                <MetricCard
-                  title="Recommended Units"
-                  value={data.investment_recommendation?.recommended_units}
-                  colorClass="text-green-400"
-                />
-                <MetricCard
-                  title="Recommended Amount"
-                  value={data.investment_recommendation?.recommended_amount?.toLocaleString(
-                    "en-US",
-                    {
-                      style: "currency",
-                      currency: "USD",
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }
-                  )}
-                />
+        )}
+        {aiLoading && (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+            <p className="mt-2 text-gray-400">Running AI prediction...</p>
+          </div>
+        )}
+
+        {/* Display Data */}
+        {data && (
+          <div className="space-y-6">
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <MetricCard title="Current Price" value={data.metrics?.current_price?.toFixed(2)} />
+              <MetricCard
+                title="RSI (14)"
+                value={data.metrics?.technical_metrics?.rsi?.toFixed(1)}
+                colorClass={
+                  data.metrics?.technical_metrics?.rsi > 70
+                    ? "text-red-400"
+                    : data.metrics?.technical_metrics?.rsi < 30
+                    ? "text-green-400"
+                    : "text-white"
+                }
+              />
+              <MetricCard title="Recommended Units" value={data.investment_recommendation?.recommended_units} />
+              <MetricCard
+                title="Recommended Amount"
+                value={data.investment_recommendation?.recommended_amount?.toLocaleString("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                })}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <MetricCard
+                title="Market Scenario"
+                value={data.scenario?.toUpperCase()}
+                colorClass={data.scenario === "high" ? "text-green-400" : "text-red-400"}
+              />
+              <MetricCard
+                title="Volatility"
+                value={`${(data.metrics?.performance_metrics?.volatility * 100).toFixed(2)}%`}
+                colorClass={
+                  data.metrics?.performance_metrics?.volatility > 0.2 ? "text-red-400" : "text-green-400"
+                }
+              />
+              <MetricCard
+                title="Remaining Target"
+                value={data.investment_recommendation?.remaining_target?.toLocaleString("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                })}
+              />
+              <MetricCard
+                title="Position Multiplier"
+                value={data.investment_recommendation?.allocation_multiplier?.toFixed(2)}
+                suffix="x"
+              />
+            </div>
+
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-gray-800 p-6 rounded-lg">
+                <h2 className="text-xl font-bold mb-4">Price and Moving Averages</h2>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={data.moving_averages_data}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="date" stroke="#9CA3AF" />
+                      <YAxis stroke="#9CA3AF" />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#1F2937",
+                          border: "1px solid #374151",
+                          borderRadius: "0.375rem",
+                        }}
+                        labelStyle={{ color: "#E5E7EB" }}
+                      />
+                      <Legend />
+                      <Line type="monotone" dataKey="price" name="Price" stroke="#60A5FA" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="SMA20" name="SMA20" stroke="#34D399" strokeWidth={1} dot={false} />
+                      <Line type="monotone" dataKey="SMA50" name="SMA50" stroke="#F59E0B" strokeWidth={1} dot={false} />
+                      <Line type="monotone" dataKey="SMA200" name="SMA200" stroke="#EF4444" strokeWidth={1} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <MetricCard
-                  title="Market Scenario"
-                  value={data.scenario?.toUpperCase()}
-                  colorClass={
-                    data.scenario === "high" ? "text-green-400" : "text-red-400"
-                  }
-                />
-                <MetricCard
-                  title="Volatility"
-                  value={`${(
-                    data.metrics?.performance_metrics?.volatility * 100
-                  ).toFixed(2)}%`}
-                  colorClass={
-                    data.metrics?.performance_metrics?.volatility > 0.2
-                      ? "text-red-400"
-                      : "text-green-400"
-                  }
-                />
-                <MetricCard
-                  title="Remaining Target"
-                  value={data.investment_recommendation?.remaining_target?.toLocaleString(
-                    "en-US",
-                    {
-                      style: "currency",
-                      currency: "USD",
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }
-                  )}
-                />
-                <MetricCard
-                  title="Position Multiplier"
-                  value={data.investment_recommendation?.allocation_multiplier?.toFixed(
-                    2
-                  )}
-                  suffix="x"
-                />
-              </div>
-
-              {/* Charts */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* AI Prediction Chart */}
+              {aiData && (
                 <div className="bg-gray-800 p-6 rounded-lg">
-                  <h2 className="text-xl font-bold mb-4">
-                    Price and Moving Averages
-                  </h2>
+                  <h2 className="text-xl font-bold mb-4">AI Predicted Prices for Next 30 Days</h2>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={data.moving_averages_data}>
+                      <LineChart data={aiData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                        <XAxis dataKey="date" stroke="#9CA3AF" />
+                        <XAxis dataKey="ds" stroke="#9CA3AF" />
                         <YAxis stroke="#9CA3AF" />
                         <Tooltip
                           contentStyle={{
@@ -357,79 +437,16 @@ const Dashboard = () => {
                           labelStyle={{ color: "#E5E7EB" }}
                         />
                         <Legend />
-                        <Line
-                          type="monotone"
-                          dataKey="price"
-                          name="Price"
-                          stroke="#60A5FA"
-                          strokeWidth={2}
-                          dot={false}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="SMA20"
-                          name="SMA20"
-                          stroke="#34D399"
-                          strokeWidth={1}
-                          dot={false}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="SMA50"
-                          name="SMA50"
-                          stroke="#F59E0B"
-                          strokeWidth={1}
-                          dot={false}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="SMA200"
-                          name="SMA200"
-                          stroke="#EF4444"
-                          strokeWidth={1}
-                          dot={false}
-                        />
+                        <Line type="monotone" dataKey="yhat" name="Predicted Price" stroke="#A78BFA" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="yhat_lower" name="Lower Confidence" stroke="#34D399" strokeWidth={1} dot={false} strokeDasharray="5 5" />
+                        <Line type="monotone" dataKey="yhat_upper" name="Upper Confidence" stroke="#F59E0B" strokeWidth={1} dot={false} strokeDasharray="5 5" />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
-
-                <div className="bg-gray-800 p-6 rounded-lg">
-                  <h2 className="text-xl font-bold mb-4">
-                    Performance Metrics
-                  </h2>
-                  <div className="space-y-3">
-                    {data.metrics?.performance_metrics &&
-                      Object.entries(data.metrics.performance_metrics).map(
-                        ([key, value]) => (
-                          <div
-                            key={key}
-                            className="flex justify-between items-center border-b border-gray-700 py-2"
-                          >
-                            <span className="text-gray-400 capitalize">
-                              {key.replace(/_/g, " ")}
-                            </span>
-                            <span
-                              className={`font-medium ${
-                                typeof value === "number"
-                                  ? value < 0
-                                    ? "text-red-400"
-                                    : "text-green-400"
-                                  : "text-white"
-                              }`}
-                            >
-                              {typeof value === "number"
-                                ? value.toFixed(3)
-                                : value}
-                            </span>
-                          </div>
-                        )
-                      )}
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
-          )
+          </div>
         )}
       </div>
     </div>
