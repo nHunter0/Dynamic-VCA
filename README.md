@@ -1,6 +1,6 @@
 # Quantitative Trading Dashboard
 
-A full-stack quantitative trading analysis platform that combines traditional technical indicators with AI/ML predictions for enhanced market analysis.
+A full-stack quantitative trading analysis platform that combines traditional technical indicators with AI/ML predictions for enhanced market analysis. Designed to Value Cost Average (VCA) ASX stocks. Developed to maximize long-term investment returns through systematic, data-driven decision making. (Rather than DCA like a noob)
 
 ## Table of Contents
 
