@@ -1,4 +1,4 @@
-# Quantitative Trading Dashboard
+# Dynamic VCA with a Quantitative Trading Dashboard
 
 A full-stack quantitative trading analysis platform that combines traditional technical indicators with AI/ML predictions for enhanced market analysis. Designed to Value Cost Average (VCA) ASX stocks. Developed to maximize long-term investment returns through systematic, data-driven decision making. (Rather than DCA like a noob)
 
@@ -44,7 +44,6 @@ This platform integrates multiple layers of market analysis:
 2. AI-driven price predictions
 3. Risk management metrics
 4. Market regime detection
-5. Advanced backtesting capabilities
 
 ## Features
 
@@ -55,6 +54,7 @@ This platform integrates multiple layers of market analysis:
 - Multiple timeframe analysis
 - Volume profile analysis
 - Risk metrics calculation
+- Recommended VCA for the current month
 
 ### AI/ML Predictions
 
@@ -305,7 +305,7 @@ pip install --upgrade certifi
 3. Set your investment parameters:
    - Monthly target investment
    - Total investment target
-   - Risk tolerance level
+   - Chose a AI modle to run
 
 The system will provide:
 
