@@ -182,6 +182,7 @@ const Dashboard = () => {
               <Brain className="w-5 h-5" />
               LSTM Model
             </button>
+            {/* Disable Backtest for now. 
             {aiData && (
               <button
                 onClick={handleBacktest}
@@ -191,7 +192,7 @@ const Dashboard = () => {
                 <History className="w-5 h-5" />
                 5Y Backtest
               </button>
-            )}
+            )} */}
           </div>
         )}
 

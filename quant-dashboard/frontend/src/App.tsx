@@ -1,5 +1,5 @@
 // src/App.txs
-import React from "react";
+// @ts-ignore
 import Dashboard from "./components/Dashboard/Dashboard";
 
 function App() {

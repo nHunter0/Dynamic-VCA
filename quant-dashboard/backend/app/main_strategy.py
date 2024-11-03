@@ -16,6 +16,7 @@ class EnhancedQuantStrategy:
         self.high_price_ratio = high_price_ratio
         self.low_price_ratio = low_price_ratio
         self.indicators = TechnicalIndicators()
+        self.total_invested = 0  # Track total investments
         
     def get_historical_data(self, days=365):
         """Fetch and prepare historical data with indicators."""
@@ -59,49 +60,73 @@ class EnhancedQuantStrategy:
         """Calculate detailed investment recommendations."""
         position_multiplier = 1.0
         
-        # Adjust for market regime
+        # Adjust position size based on market regime
         if market_regime > 0.5:
-            position_multiplier *= 1.2
+            position_multiplier *= 1.2  # Increase position in strong uptrend
         elif market_regime < -0.5:
-            position_multiplier *= 0.8
+            position_multiplier *= 0.8  # Decrease position in strong downtrend
             
         # Adjust for volatility
         if volatility > 0.25:
-            position_multiplier *= 0.8
+            position_multiplier *= 0.8  # Reduce position in high volatility
         elif volatility < 0.15:
-            position_multiplier *= 1.2
+            position_multiplier *= 1.2  # Increase position in low volatility
         
-        recommended_amount = self.monthly_target * position_multiplier
+        # Calculate remaining target before new investment
+        remaining_before = max(0, self.total_target - self.total_invested)
+        
+        # Calculate recommended amount considering remaining target
+        recommended_amount = min(
+            self.monthly_target * position_multiplier,
+            remaining_before  # Don't recommend more than what's remaining
+        )
+        
+        # Calculate units based on adjusted amount
         recommended_units = int(recommended_amount / current_price) if current_price > 0 else 0
-        total_invested = self.monthly_target
-        remaining_target = max(0, self.total_target - total_invested)
+        
+        # Calculate actual investment amount based on units
+        actual_investment = recommended_units * current_price
+        
+        # Update total invested
+        self.total_invested += actual_investment
+        
+        # Calculate remaining target after this investment
+        remaining_target = max(0, self.total_target - self.total_invested)
         
         return {
             'recommended_amount': recommended_amount,
             'recommended_units': recommended_units,
             'remaining_target': remaining_target,
-            'allocation_multiplier': position_multiplier
+            'allocation_multiplier': position_multiplier,
+            'total_invested': self.total_invested
         }
     
     def calculate_recommendation(self):
-        """Generate investment recommendation."""
+        """Generate comprehensive investment recommendation."""
         try:
+            # Get historical data and calculate indicators
             data, moving_averages = self.get_historical_data()
+            
+            # Extract current metrics
             current_price = data['Close'].iloc[-1]
             rsi = data['RSI'].iloc[-1] if 'RSI' in data else 50
             stoch_rsi = data['Stoch_RSI'].iloc[-1] if 'Stoch_RSI' in data else 0.5
             roc = data['ROC'].iloc[-1] if 'ROC' in data else 0
             
+            # Calculate momentum metrics
             price_momentum = (current_price / data['Close'].iloc[-20] - 1) if len(data) >= 20 else 0
             volume_momentum = (data['Volume'].iloc[-1] / data['Volume'].iloc[-20] - 1) if len(data) >= 20 else 0
             volatility = data['ATR'].iloc[-1]
             
+            # Calculate market regime
             market_regime = self.indicators.calculate_market_regime(data)
             
+            # Get investment recommendation
             investment_rec = self.calculate_investment_recommendation(
                 current_price, market_regime, volatility
             )
             
+            # Compile results
             results = {
                 'metrics': {
                     'current_price': current_price,
@@ -128,7 +153,8 @@ class EnhancedQuantStrategy:
                     'recommended_amount': investment_rec['recommended_amount'],
                     'recommended_units': investment_rec['recommended_units'],
                     'remaining_target': investment_rec['remaining_target'],
-                    'allocation_multiplier': investment_rec['allocation_multiplier']
+                    'allocation_multiplier': investment_rec['allocation_multiplier'],
+                    'total_invested': investment_rec['total_invested']
                 },
                 'moving_averages_data': moving_averages,
                 'scenario': 'high' if market_regime > 0 else 'low'
@@ -142,7 +168,6 @@ class EnhancedQuantStrategy:
     def predict_future(self):
         """Wrapper method to call the predict_future function for AI prediction."""
         try:
-            # Calls the function from predict_future.py
             return predict_future(self.ticker)
         except Exception as e:
             raise Exception(f"Error in AI prediction: {str(e)}")

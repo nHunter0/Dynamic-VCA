@@ -1,21 +1,16 @@
 // src/components/StockOptions.js
 
 const STOCK_OPTIONS = [
-  // Original ETFs
+  // ETFs
   {
-    value: "VAS.AX",
-    label: "VAS - Vanguard Australian Shares",
-    description: "Vanguard Australian Shares Index ETF",
+    value: "^AXJO",
+    label: "^AXJO - S&P/ASX 200",
+    description: "S&P/ASX 200 ETF",
   },
   {
-    value: "IVV.AX",
-    label: "IVV - iShares S&P 500",
-    description: "iShares S&P 500 ETF",
-  },
-  {
-    value: "OOO.AX",
-    label: "OOO - BetaShares Crude Oil",
-    description: "BetaShares Crude Oil Index ETF",
+    value: "^ATOI",
+    label: "^ATOI - S&P/ASX 100",
+    description: "S&P/ASX 100 ETF",
   },
   {
     value: "NDQ.AX",
@@ -32,7 +27,21 @@ const STOCK_OPTIONS = [
     label: "VDHG - Vanguard Diversified High Growth",
     description: "Vanguard Diversified High Growth Index ETF",
   },
-
+  {
+    value: "HACK.AX",
+    label: "HACK - Betashares Global Cybersecurity",
+    description: "Betashares Global Cybersecurity ETF",
+  },
+  {
+    value: "VAS.AX",
+    label: "VAS - Vanguard Australian Shares",
+    description: "Vanguard Australian Shares Index ETF",
+  },
+  {
+    value: "IVV.AX",
+    label: "IVV - iShares S&P 500",
+    description: "iShares S&P 500 ETF",
+  },
   // Crypto-related
   {
     value: "CRYP.AX",
